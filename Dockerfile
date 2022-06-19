@@ -1,15 +1,14 @@
-FROM docker.io/tiredofit/alpine:3.16
-LABEL maintainer="Dave Conroy (github.com/tiredofit)"
+FROM alpine:3.16
+LABEL maintener="UnclePhil (tc.apps.koenig.be)"
+LABEL original="Dave Conroy (github.com/tiredofit)"
 
 ### Set Environment Variables
 
 ENV INFLUX2_VERSION=2.2.1 \
     MSSQL_VERSION=17.8.1.1-1 \
-    CONTAINER_ENABLE_MESSAGING=FALSE \
-    CONTAINER_ENABLE_MONITORING=TRUE \
     CONTAINER_PROCESS_RUNAWAY_PROTECTOR=FALSE \
-    IMAGE_NAME="tiredofit/db-backup" \
-    IMAGE_REPO_URL="https://github.com/tiredofit/docker-db-backup/"
+    IMAGE_NAME="unclephil/docker-db-backup" \
+    IMAGE_REPO_URL="https://github.com/unclephil/docker-db-backup_simple/"
 
 ### Dependencies
 RUN set -ex && \
@@ -24,6 +23,7 @@ RUN set -ex && \
                && \
     \
     apk add --no-cache -t .db-backup-run-deps \
+               rclone \
                aws-cli \
                bzip2 \
                influxdb \

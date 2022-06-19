@@ -1,4 +1,6 @@
-# github.com/tiredofit/docker-db-backup
+# docker-db-backup_simple
+
+A simplified version of [tiredofit/docker-db-backup](https://github.com/tiredofit/docker-db-backup)
 
 [![GitHub release](https://img.shields.io/github/v/tag/tiredofit/docker-db-backup?style=flat-square)](https://github.com/tiredofit/docker-db-backup/releases/latest)
 [![Build Status](https://img.shields.io/github/workflow/status/tiredofit/docker-db-backup/build?style=flat-square)](https://github.com/tiredofit/docker-db-backup/actions?query=workflow%3Abuild)
@@ -23,14 +25,18 @@ Currently backs up CouchDB, InfluxDB, MySQL, MongoDB, Postgres, Redis servers.
 * choose compression type (none, gz, bz, xz, zstd)
 * connect to any container running on the same system
 * Script to perform restores
-* Zabbix Monitoring capabilities
 * select how often to run a dump
 * select when to start the first dump, whether time of day or relative to container start time
 * Execute script after backup for monitoring/alerting purposes
 
-## Maintainer
+### Added features
+* rclone to send backup on more than S3  -[rclone.org](https://rclone.org/)-
 
-- [Dave Conroy](https://github.com/tiredofit)
+### Removed parts
+* Zabbix Monitoring capabilities
+
+## Maintainer
+- Unclephil: based on work of [Dave Conroy](https://github.com/tiredofit)
 
 ## Table of Contents
 
