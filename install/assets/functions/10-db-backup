@@ -438,22 +438,22 @@ cleanup_old_data() {
                     mkdir -p "${DB_DUMP_TARGET}"
                     find "${DB_DUMP_TARGET}"/  -mmin +"${DB_CLEANUP_TIME}" -iname "*" -exec rm {} \;
                 ;;
-                "s3" | "minio" )
-                    print_info "Cleaning up old backups"
-                    aws ${PARAM_AWS_ENDPOINT_URL} s3 ls s3://${S3_BUCKET}/${S3_PATH} ${s3_ssl} ${s3_ca_cert} ${S3_EXTRA_OPTS} | grep " DIR " -v | while read -r s3_file; do
-                        s3_createdate=$(echo $s3_file | awk {'print $1" "$2'})
-                        s3_createdate=$(date -d "$s3_createdate" "+%s")
-                        s3_olderthan=$(echo $(( $(date +%s)-${DB_CLEANUP_TIME}*60 )))
-                        if [[ $s3_createdate -le $s3_olderthan ]] ; then
-                            s3_filename=$(echo $s3_file | awk {'print $4'})
-                            if [ "$s3_filename" != "" ] ; then
-                                print_debug "Deleting $s3_filename"
-                                silent aws ${PARAM_AWS_ENDPOINT_URL} s3 rm s3://${S3_BUCKET}/${S3_PATH}/${s3_filename} ${s3_ssl} ${s3_ca_cert} ${S3_EXTRA_OPTS}
+                "rclone" )
+                    print_info "Cleaning up old backups in rclone"
+                    ## retrieve list 
+                    rclone lsf  --separator "," --format "pt" --files-only ${RCLONE_REMOTE}:${RCLONE_PATH} | while IFS="," read fname fdate; do
+                        createdate=$(date -d "$fdate" "+%s")
+                        olderthan=$(echo $(( $(date +%s)-${DB_CLEANUP_TIME}*60 )))
+                        if [[ $createdate -le $olderthan ]] ; then
+                            if [ "$fname" != "" ] ; then
+                                print_debug "Deleting $fname"
+                                rclone deletefile ${RCLONE_REMOTE}:${RCLONE_PATH}/${fname}
                             fi
                         fi
 
                     done
                 ;;
+
             esac
         else
             print_error "Skipping Cleaning up old backups because there were errors in backing up"
@@ -588,30 +588,17 @@ move_dbbackup() {
                 mv "${TEMP_LOCATION}"/*."${checksum_extension}" "${DB_DUMP_TARGET}"/
                 mv "${TEMP_LOCATION}"/"${target}" "${DB_DUMP_TARGET}"/"${target}"
             ;;
-            "s3" | "minio" )
-                print_debug "Moving backup to S3 Bucket"
-                export AWS_ACCESS_KEY_ID=${S3_KEY_ID}
-                export AWS_SECRET_ACCESS_KEY=${S3_KEY_SECRET}
-                export AWS_DEFAULT_REGION=${S3_REGION}
-                if [ -f "${S3_CERT_CA_FILE}" ] ; then
-                    print_debug "Using Custom CA for S3 Backups"
-                    s3_ca_cert="--ca-bundle ${S3_CERT_CA_FILE}"
-                fi
-                if var_true "${S3_CERT_SKIP_VERIFY}" ; then
-                    print_debug "Skipping SSL verification for HTTPS S3 Hosts"
-                    s3_ssl="--no-verify-ssl"
-                fi
+            "rclone" )
+                print_debug "Moving backup to rclone ${RCLONE_REMOTE}:${RCLONE_PATH} destination"
 
-                [[ ( -n "${S3_HOST}" ) ]] && PARAM_AWS_ENDPOINT_URL=" --endpoint-url ${S3_PROTOCOL}://${S3_HOST}"
-
-                silent aws ${PARAM_AWS_ENDPOINT_URL} s3 cp ${TEMP_LOCATION}/${target} s3://${S3_BUCKET}/${S3_PATH}/${target} ${s3_ssl} ${s3_ca_cert} ${S3_EXTRA_OPTS}
+                rclone copy ${TEMP_LOCATION}/${target}  ${RCLONE_REMOTE}:${RCLONE_PATH}/${target} 
                 if var_true "${ENABLE_CHECKSUM}" ; then
-                    silent aws ${PARAM_AWS_ENDPOINT_URL} s3 cp ${TEMP_LOCATION}/*.${checksum_extension} s3://${S3_BUCKET}/${S3_PATH}/ ${s3_ssl} ${s3_ca_cert} ${S3_EXTRA_OPTS}
+                    rclone copy ${TEMP_LOCATION}/*.${checksum_extension}  ${RCLONE_REMOTE}:${RCLONE_PATH} 
                 fi
-
                 rm -rf "${TEMP_LOCATION}"/*."${checksum_extension}"
                 rm -rf "${TEMP_LOCATION}"/"${target}"
             ;;
+
         esac
     else
         print_error "Skipping moving DB Backup to final location because backup did not complete successfully"
@@ -633,6 +620,7 @@ post_dbbackup() {
     dbbackup_total_time=$(echo $((dbbackup_finish_time-dbbackup_start_time)))
 
     if var_true "${CONTAINER_ENABLE_MONITORING}" ; then
+        ## TBCHANGE: to any notification system 
         print_notice "Sending Backup Statistics to Zabbix"
         silent zabbix_sender -c /etc/zabbix/zabbix_agentd.conf -k dbbackup.size -o "${dbbackup_size}"
         silent zabbix_sender -c /etc/zabbix/zabbix_agentd.conf -k dbbackup.datetime -o "${dbbackup_date}"
@@ -673,8 +661,6 @@ post_dbbackup() {
     fi
 
     print_notice "DB Backup for '${1}' time taken: $(echo ${dbbackup_total_time} | awk '{printf "Hours: %d Minutes: %02d Seconds: %02d", $1/3600, ($1/60)%60, $1%60}')"
-    unset s3_ssl
-    unset s3_ca_cert
 }
 
 sanity_test() {
@@ -690,12 +676,9 @@ sanity_test() {
         ;;
     esac
 
-    if [ "${BACKUP_LOCATION,,}" = "s3" ] || [ "${BACKUP_LOCATION,,}" = "minio" ] ; then
-        sanity_var S3_BUCKET "S3 Bucket"
-        sanity_var S3_PATH "S3 Path"
-        sanity_var S3_REGION "S3 Region"
-        file_env 'S3_KEY_ID'
-        file_env 'S3_KEY_SECRET'
+    if [ "${BACKUP_LOCATION,,}" = "rclone" ] ; then
+        sanity_var RCLONE_REMOTE "rclone Bucket"
+        sanity_var RCLONE_PATH "rclone Path"
     fi
 }
 

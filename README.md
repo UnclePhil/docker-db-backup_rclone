@@ -1,6 +1,6 @@
 # docker-db-backup_simple
 
-A simplified version of [tiredofit/docker-db-backup](https://github.com/tiredofit/docker-db-backup)
+A Rclone version of [tiredofit/docker-db-backup](https://github.com/tiredofit/docker-db-backup)
 
 [![GitHub release](https://img.shields.io/github/v/tag/tiredofit/docker-db-backup?style=flat-square)](https://github.com/tiredofit/docker-db-backup/releases/latest)
 [![Build Status](https://img.shields.io/github/workflow/status/tiredofit/docker-db-backup/build?style=flat-square)](https://github.com/tiredofit/docker-db-backup/actions?query=workflow%3Abuild)
@@ -16,7 +16,7 @@ This will build a container for backing up multiple types of DB Servers
 
 Currently backs up CouchDB, InfluxDB, MySQL, MongoDB, Postgres, Redis servers.
 
-* dump to local filesystem or backup to S3 Compatible services
+* dump to local filesystem or backup to any Rclone Compatible services
 * select database user and password
 * backup all databases, single, or multiple databases
 * backup all to seperate files or one singular file
@@ -84,7 +84,7 @@ Currently backs up CouchDB, InfluxDB, MySQL, MongoDB, Postgres, Redis servers.
 Clone this repository and build the image with `docker build <arguments> (imagename) .`
 
 ### Prebuilt Images
-Builds of the image are available on [Docker Hub](https://hub.docker.com/r/tiredofit/db-backup) and is the recommended method of installation.
+Builds of the image are available on [Docker Hub](https://hub.docker.com/r/unclephil/docker-db-backup-rclone) and is the recommended method of installation.
 
 The following image tags are available along with their tagged release based on what's written in the [Changelog](CHANGELOG.md):
 
@@ -93,7 +93,7 @@ The following image tags are available along with their tagged release based on 
 | latest      | `:latest` |
 
 ```bash
-docker pull tiredofit/db-backup:(imagetag)
+docker pull unclephil/docker-db-backup-rclone:(imagetag)
 ```
 #### Multi Architecture
 Images are built primarily for `amd64` architecture, and may also include builds for `arm/v7`, `arm64` and others. These variants are all unsupported. Consider [sponsoring](https://github.com/sponsors/tiredofit) my work so that I can work with various hardware. To see if this image supports multiple architecures, type `docker manifest (image):(tag)`
@@ -114,6 +114,7 @@ The following directories are used for configuration and can be mapped for persi
 | ------------------------ | ---------------------------------------------------------------------------------- |
 | `/backup`                | Backups                                                                            |
 | `/assets/custom-scripts` | *Optional* Put custom scripts in this directory to execute after backup operations |
+| `/opt/rclone/rclone.conf | a standard rclone configuration file                                               |
 
 ### Environment Variables
 
@@ -181,23 +182,15 @@ Your Organization will be mapped to `DB_USER` and your root token will need to b
 
 - When using compression with MongoDB, only `GZ` compression is possible.
 
-#### Backing Up to S3 Compatible Services
+#### Backing Up to rclone Compatible Services
 
-If `BACKUP_LOCATION` = `S3` then the following options are used.
+If `BACKUP_LOCATION` = `rclone` then the following options are used.
 
 | Parameter             | Description                                                                               | Default |
 | --------------------- | ----------------------------------------------------------------------------------------- | ------- |
-| `S3_BUCKET`           | S3 Bucket name e.g. `mybucket`                                                            |         |
-| `S3_KEY_ID`           | S3 Key ID                                                                                 |         |
-| `S3_KEY_SECRET`       | S3 Key Secret                                                                             |         |
-| `S3_PATH`             | S3 Pathname to save to e.g. '`backup`'                                                    |         |
-| `S3_REGION`           | Define region in which bucket is defined. Example: `ap-northeast-2`                       |         |
-| `S3_HOST`             | Hostname (and port) of S3-compatible service, e.g. `minio:8080`. Defaults to AWS.         |         |
-| `S3_PROTOCOL`         | Protocol to connect to `S3_HOST`. Either `http` or `https`. Defaults to `https`.          | `https` |
-| `S3_EXTRA_OPTS`       | Add any extra options to the end of the `aws-cli` process execution                       |         |
-| `S3_CERT_CA_FILE`     | Map a volume and point to your custom CA Bundle for verification e.g. `/certs/bundle.pem` |         |
-| _*OR*_                |                                                                                           |         |
-| `S3_CERT_SKIP_VERIFY` | Skip verifying self signed certificates when connecting                                   | `TRUE`  |
+| `RCLONE_REMOTE'       | the rclone.conf location definition                                                       |none     |
+| `RCLONE_PATH`         | the path inside the remote                                                                |/rclone  |
+| `RCLONE CONFIG`       | path in where the rclone.conf file is defined                                             |/opt/rclone/rclone.conf         |
 
 ## Maintenance
 

@@ -1,5 +1,5 @@
 FROM alpine:3.16
-LABEL maintener="UnclePhil (tc.apps.koenig.be)"
+LABEL maintainer="UnclePhil (tc.apps.koenig.be)"
 LABEL original="Dave Conroy (github.com/tiredofit)"
 
 ### Set Environment Variables
@@ -7,8 +7,8 @@ LABEL original="Dave Conroy (github.com/tiredofit)"
 ENV INFLUX2_VERSION=2.2.1 \
     MSSQL_VERSION=17.8.1.1-1 \
     CONTAINER_PROCESS_RUNAWAY_PROTECTOR=FALSE \
-    IMAGE_NAME="unclephil/docker-db-backup" \
-    IMAGE_REPO_URL="https://github.com/unclephil/docker-db-backup_simple/"
+    IMAGE_NAME="unclephil/docker-db-backup-rclone" \
+    IMAGE_REPO_URL="https://github.com/unclephil/docker-db-backup_rclone/"
 
 ### Dependencies
 RUN set -ex && \
@@ -24,7 +24,6 @@ RUN set -ex && \
     \
     apk add --no-cache -t .db-backup-run-deps \
                rclone \
-               aws-cli \
                bzip2 \
                influxdb \
                libarchive \
