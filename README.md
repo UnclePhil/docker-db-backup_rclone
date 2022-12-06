@@ -1,4 +1,4 @@
-# docker-db-backup_simple
+# docker-db-backup-rclone
 
 A Rclone version of [tiredofit/docker-db-backup](https://github.com/tiredofit/docker-db-backup)
 
@@ -16,7 +16,7 @@ This will build a container for backing up multiple types of DB Servers
 
 Currently backs up CouchDB, InfluxDB, MySQL, MongoDB, Postgres, Redis servers.
 
-* dump to local filesystem or backup to any Rclone Compatible services
+* dump to local filesystem or backup to any Rclone Compatible services  
 * select database user and password
 * backup all databases, single, or multiple databases
 * backup all to seperate files or one singular file
@@ -31,6 +31,8 @@ Currently backs up CouchDB, InfluxDB, MySQL, MongoDB, Postgres, Redis servers.
 
 ### Added features
 * rclone to send backup on more than S3  -[rclone.org](https://rclone.org/)-
+* replace the /install/asset/10-db-backups in the original image by a rclone version
+
 
 ### Removed parts
 * Zabbix Monitoring capabilities
@@ -77,6 +79,7 @@ Currently backs up CouchDB, InfluxDB, MySQL, MongoDB, Postgres, Redis servers.
 
 ## Prerequisites and Assumptions
 *  You must have a working connection to one of the supported DB Servers and appropriate credentials
+*  you need to know how to create a rclone.conf configuration file  
 
 ## Installation
 
@@ -114,7 +117,12 @@ The following directories are used for configuration and can be mapped for persi
 | ------------------------ | ---------------------------------------------------------------------------------- |
 | `/backup`                | Backups                                                                            |
 | `/assets/custom-scripts` | *Optional* Put custom scripts in this directory to execute after backup operations |
-| `/opt/rclone/rclone.conf | a standard rclone configuration file                                               |
+
+### Rclone config
+The rclone.conf file can be offered as 
+- persistant storage in the case of a docker-compose instance, 
+- a config in the cass of a docker (swarm) stack 
+
 
 ### Environment Variables
 
