@@ -583,13 +583,13 @@ move_dbbackup() {
 
         case "${BACKUP_LOCATION,,}" in
             "file" | "filesystem" )
-                print_debug "Moving backup to filesystem"
+                print_info "Moving backup ${target} to filesystem"
                 mkdir -p "${DB_DUMP_TARGET}"
                 mv "${TEMP_LOCATION}"/*."${checksum_extension}" "${DB_DUMP_TARGET}"/
                 mv "${TEMP_LOCATION}"/"${target}" "${DB_DUMP_TARGET}"/"${target}"
             ;;
             "rclone" )
-                print_debug "Moving backup to rclone ${RCLONE_REMOTE}:${RCLONE_PATH} destination"
+                print_info "Moving backup to rclone ${RCLONE_REMOTE}:${RCLONE_PATH}/${target} destination"
 
                 rclone copy ${TEMP_LOCATION}/${target}  ${RCLONE_REMOTE}:${RCLONE_PATH}/${target} 
                 if var_true "${ENABLE_CHECKSUM}" ; then
