@@ -14,8 +14,8 @@ export $(shell sed 's/=.*//' $(dpl))
 # get the version from the date/time
 # VERSION=$(shell date '+%Y%m%d%H%M%S')
 DT=$(shell date '+%Y%m%d%H%M')
-RVERSION=$(VERSION)-${DT}
-
+## RVERSION=$(VERSION)-${DT}
+RVERSION=$(VERSION)
 
 # HELP
 # This will output the help for each task
